@@ -15,7 +15,7 @@ import (
 
 var InitTime = time.Now()
 
-const Version = "0.1.0"
+const Version = "0.1.1"
 
 type OutputType uint8
 
@@ -46,6 +46,12 @@ func StopwatchPath() string {
 	}
 
 	return os.Getenv("HOME") + "/.local/share/stopwatch"
+}
+
+func RemoveStopwatchFile() (err error) {
+	filename := path.Join(StopwatchPath(), "stopwatch.json")
+	err = os.Remove(filename)
+	return
 }
 
 func OpenStopwatchFile() (file *os.File, err error) {
@@ -123,6 +129,7 @@ func Usage() {
 	fmt.Fprintln(os.Stderr, "  stopwatch -stop <id> [-s | -ms]")
 	fmt.Fprintln(os.Stderr, "  stopwatch -ls [-s | -ms]")
 	fmt.Fprintln(os.Stderr, "  stopwatch -wait [-s | -ms] [-l]")
+	fmt.Fprintln(os.Stderr, "  stopwatch -purge")
 	fmt.Fprintln(os.Stderr, "  stopwatch -h")
 	fmt.Fprintln(os.Stderr, "  stopwatch -v")
 	fmt.Fprintln(os.Stderr, "")
@@ -268,6 +275,14 @@ func Wait(live bool, outputType OutputType) int {
 	return 0
 }
 
+func Purge() int {
+	if err := RemoveStopwatchFile(); err != nil {
+		fmt.Fprintf(os.Stderr, "error removing stopwatch file: %s\n", err)
+		return 1
+	}
+	return 0
+}
+
 // Format duration according to output type
 func DurationString(d time.Duration, format OutputType) string {
 	if format == Seconds {
@@ -289,6 +304,7 @@ var (
 	millisecondsFlag = flag.Bool("ms", false, "output duration in milliseconds")
 	waitingFlag      = flag.Bool("wait", false, "start a new stopwatch and wait for SIGINT (does not write to file)")
 	liveFlag         = flag.Bool("l", false, "live output (only with -wait)")
+	purgeFlag        = flag.Bool("purge", false, "remove stopwatch file")
 )
 
 func main() {
@@ -316,8 +332,10 @@ func main() {
 		os.Exit(List(outputType))
 	} else if *waitingFlag {
 		os.Exit(Wait(*liveFlag, outputType))
-	} else {
-		flag.Usage()
-		os.Exit(1)
+	} else if *purgeFlag {
+		os.Exit(Purge())
 	}
+
+	flag.Usage()
+	os.Exit(1)
 }

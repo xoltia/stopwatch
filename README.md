@@ -31,4 +31,7 @@ stopwatch -wait
 
 # Start a blocking stopwatch and show live time
 stopwath -wait -l
+
+# Stop all non-blocking stopwatches
+stopwatch -purge
 ```
