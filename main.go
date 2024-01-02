@@ -126,16 +126,17 @@ func CloseStopwatchFile(file *os.File) (err error) {
 
 // Print usage
 func Usage() {
-	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  stopwatch -start [-n <name>]")
-	fmt.Fprintln(os.Stderr, "  stopwatch -stop <id> [-s | -ms]")
-	fmt.Fprintln(os.Stderr, "  stopwatch -ls [-s | -ms]")
-	fmt.Fprintln(os.Stderr, "  stopwatch -wait [-s | -ms] [-l]")
-	fmt.Fprintln(os.Stderr, "  stopwatch -purge")
-	fmt.Fprintln(os.Stderr, "  stopwatch -h")
-	fmt.Fprintln(os.Stderr, "  stopwatch -v")
-	fmt.Fprintln(os.Stderr, "")
-	fmt.Fprintln(os.Stderr, "Options:")
+	out := flag.CommandLine.Output()
+	fmt.Fprintln(out, "Usage:")
+	fmt.Fprintln(out, "  stopwatch -start [-n <name>]")
+	fmt.Fprintln(out, "  stopwatch -stop <id> [-s | -ms]")
+	fmt.Fprintln(out, "  stopwatch -ls [-s | -ms]")
+	fmt.Fprintln(out, "  stopwatch -wait [-s | -ms] [-l]")
+	fmt.Fprintln(out, "  stopwatch -purge")
+	fmt.Fprintln(out, "  stopwatch -h")
+	fmt.Fprintln(out, "  stopwatch -v")
+	fmt.Fprintln(out, "")
+	fmt.Fprintln(out, "Options:")
 	flag.PrintDefaults()
 }
 
