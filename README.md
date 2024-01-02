@@ -3,7 +3,7 @@ A simple CLI stopwatch written in Go.
 
 ## Installation
 ```bash
-go install github.com/xoltia/stopwatch
+go install github.com/xoltia/stopwatch@latest
 ```
 
 ## Usage
