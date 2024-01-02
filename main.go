@@ -2,8 +2,10 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -15,7 +17,7 @@ import (
 
 var InitTime = time.Now()
 
-const Version = "0.1.1"
+const Version = "0.1.2"
 
 type OutputType uint8
 
@@ -140,13 +142,14 @@ func Usage() {
 // Start a new stopwatch and print id
 func Start(id string) int {
 	if id == "" {
-		randomBytes := make([]byte, 8)
-		if _, err := rand.Read(randomBytes); err != nil {
+		b := make([]byte, 8)
+		binary.BigEndian.PutUint32(b, uint32(time.Now().Unix()))
+		if _, err := rand.Read(b[4:]); err != nil {
 			fmt.Fprintf(os.Stderr, "error generating random id: %s\n", err)
 			return 1
 		}
 
-		id = hex.EncodeToString(randomBytes)
+		id = hex.EncodeToString(b)
 	}
 
 	file, err := OpenStopwatchFile()
@@ -276,7 +279,7 @@ func Wait(live bool, outputType OutputType) int {
 }
 
 func Purge() int {
-	if err := RemoveStopwatchFile(); err != nil {
+	if err := RemoveStopwatchFile(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		fmt.Fprintf(os.Stderr, "error removing stopwatch file: %s\n", err)
 		return 1
 	}
