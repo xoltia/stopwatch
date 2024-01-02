@@ -255,28 +255,27 @@ func Wait(live bool, outputType OutputType) int {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
-	if live {
-		ticker := time.NewTicker(time.Millisecond * 100)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-signalChan:
-				fmt.Print("\033[2K\r")
-				fmt.Println(DurationString(time.Since(InitTime), outputType))
-				return 0
-			case <-ticker.C:
-				fmt.Print("\033[2K\r")
-				fmt.Printf("%s", DurationString(time.Since(InitTime).Round(time.Millisecond*100), outputType))
-			}
-		}
-	} else {
+	if !live {
 		<-signalChan
 		fmt.Print("\033[2K\r")
 		fmt.Println(DurationString(time.Since(InitTime), outputType))
+		return 0
 	}
 
-	return 0
+	ticker := time.NewTicker(time.Millisecond * 100)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-signalChan:
+			fmt.Print("\033[2K\r")
+			fmt.Println(DurationString(time.Since(InitTime), outputType))
+			return 0
+		case <-ticker.C:
+			fmt.Print("\033[2K\r")
+			fmt.Printf("%s", DurationString(time.Since(InitTime).Round(time.Millisecond*100), outputType))
+		}
+	}
 }
 
 func Purge() int {
