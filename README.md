@@ -10,7 +10,7 @@ go install github.com/xoltia/stopwatch@latest
 ```bash
 # Start the stopwatch
 sid=$(stopwatch -start)
-# Stop the stopwatch and output string (ex. 1h2m3s4ms)
+# Stop the stopwatch and output string (ex. 1h2m3.396635065s)
 stopwatch -stop $sid
 # Stop the stopwatch and output milliseconds
 stopwatch -ms -stop $sid
