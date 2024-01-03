@@ -17,7 +17,7 @@ import (
 
 var InitTime = time.Now()
 
-const Version = "0.1.3"
+const Version = "0.1.4"
 
 type OutputType uint8
 
@@ -33,10 +33,10 @@ func (s StopwatchEntries) Add(id string, startTime time.Time) {
 	s[id] = startTime
 }
 
-func (s StopwatchEntries) Clear(id string) time.Duration {
+func (s StopwatchEntries) Clear(id string, stopTime time.Time) time.Duration {
 	if startTime, ok := s[id]; ok {
 		delete(s, id)
-		return InitTime.Sub(startTime)
+		return stopTime.Sub(startTime)
 	}
 
 	return 0
@@ -141,7 +141,7 @@ func Usage() {
 }
 
 // Start a new stopwatch and print id
-func Start(id string) int {
+func Start(id string, startTime time.Time) int {
 	if id == "" {
 		b := make([]byte, 8)
 		binary.BigEndian.PutUint32(b, uint32(time.Now().Unix()))
@@ -172,7 +172,7 @@ func Start(id string) int {
 		return 1
 	}
 
-	entries.Add(id, InitTime)
+	entries.Add(id, startTime)
 
 	if err = WriteStopwatchFile(file, entries); err != nil {
 		fmt.Fprintf(os.Stderr, "error writing file %s: %s\n", file.Name(), err)
@@ -184,7 +184,7 @@ func Start(id string) int {
 }
 
 // Stop a stopwatch and print duration
-func Stop(id string, outputType OutputType) int {
+func Stop(id string, outputType OutputType, stopTime time.Time) int {
 	file, err := OpenStopwatchFile()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error opening file %s\n", err)
@@ -204,7 +204,7 @@ func Stop(id string, outputType OutputType) int {
 		return 1
 	}
 
-	duration := entries.Clear(id)
+	duration := entries.Clear(id, stopTime)
 
 	if duration == 0 {
 		fmt.Fprintf(os.Stderr, "no stopwatch with id %s found\n", id)
@@ -323,6 +323,7 @@ var (
 	liveFlag         = flag.Bool("l", false, "live output (only with -wait)")
 	purgeFlag        = flag.Bool("purge", false, "remove stopwatch file")
 	confirmFlag      = flag.Bool("y", false, "skip confirmation (only with -purge)")
+	timeFlag         = flag.Int64("t", 0, "set the current start/stop time (unix timestamp in nanoseconds)")
 )
 
 func main() {
@@ -339,13 +340,19 @@ func main() {
 		outputType = String
 	}
 
+	var t = InitTime
+
+	if *timeFlag != 0 {
+		t = time.Unix(0, *timeFlag)
+	}
+
 	if *versionFlag {
 		fmt.Println(Version)
 		os.Exit(0)
 	} else if *startFlag {
-		os.Exit(Start(*idFlag))
+		os.Exit(Start(*idFlag, t))
 	} else if *stopFlag != "" {
-		os.Exit(Stop(*stopFlag, outputType))
+		os.Exit(Stop(*stopFlag, outputType, t))
 	} else if *listFlag {
 		os.Exit(List(outputType))
 	} else if *waitingFlag {
