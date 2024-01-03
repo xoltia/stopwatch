@@ -17,7 +17,7 @@ import (
 
 var InitTime = time.Now()
 
-const Version = "0.1.2"
+const Version = "0.1.3"
 
 type OutputType uint8
 
@@ -132,7 +132,7 @@ func Usage() {
 	fmt.Fprintln(out, "  stopwatch -stop <id> [-s | -ms]")
 	fmt.Fprintln(out, "  stopwatch -ls [-s | -ms]")
 	fmt.Fprintln(out, "  stopwatch -wait [-s | -ms] [-l]")
-	fmt.Fprintln(out, "  stopwatch -purge")
+	fmt.Fprintln(out, "  stopwatch -purge [-y]")
 	fmt.Fprintln(out, "  stopwatch -h")
 	fmt.Fprintln(out, "  stopwatch -v")
 	fmt.Fprintln(out, "")
@@ -278,7 +278,21 @@ func Wait(live bool, outputType OutputType) int {
 	}
 }
 
-func Purge() int {
+func Purge(skipConfirmation bool) int {
+	if !skipConfirmation {
+		fmt.Fprintf(os.Stderr, "Are you sure you want to remove the stopwatch file? [y/N] ")
+		var answer string
+
+		if _, err := fmt.Scanln(&answer); err != nil {
+			fmt.Fprintf(os.Stderr, "error reading input: %s\n", err)
+			return 1
+		}
+
+		if answer != "y" && answer != "Y" {
+			return 0
+		}
+	}
+
 	if err := RemoveStopwatchFile(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		fmt.Fprintf(os.Stderr, "error removing stopwatch file: %s\n", err)
 		return 1
@@ -308,6 +322,7 @@ var (
 	waitingFlag      = flag.Bool("wait", false, "start a new stopwatch and wait for SIGINT (does not write to file)")
 	liveFlag         = flag.Bool("l", false, "live output (only with -wait)")
 	purgeFlag        = flag.Bool("purge", false, "remove stopwatch file")
+	confirmFlag      = flag.Bool("y", false, "skip confirmation (only with -purge)")
 )
 
 func main() {
@@ -336,7 +351,7 @@ func main() {
 	} else if *waitingFlag {
 		os.Exit(Wait(*liveFlag, outputType))
 	} else if *purgeFlag {
-		os.Exit(Purge())
+		os.Exit(Purge(*confirmFlag))
 	}
 
 	flag.Usage()
